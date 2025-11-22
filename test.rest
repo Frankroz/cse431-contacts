@@ -1,1 +1,80 @@
-GET http://localhost:8080/users
+// @name Host Configuration
+@host = http://localhost:8080
+@bookId = 691de4a52a45b89003e11526
+
+// --- 1. CREATE (POST) a New Book ---
+// This request creates a new book and captures the returned ID for subsequent requests.
+
+POST {{host}}/books
+Content-Type: application/json
+
+{
+"title": "Foundation",
+"author": "Isaac Asimov",
+"isbn": "978-0553293357",
+"pages": 244
+}
+
+// Capture the ID from the response to use in future requests
+@bookId = {{$.response.json.id}}
+
+// --- 2. GET Single Book by ID (READ) ---
+// Uses the @bookId captured in the POST request.
+
+GET {{host}}/books/{{bookId}}
+Content-Type: application/json
+
+// --- 3. GET All Books (READ) ---
+// Retrieves the entire collection, useful for checking if the POST was successful.
+
+GET {{host}}/books
+Content-Type: application/json
+
+// --- 4. UPDATE (PUT) the Book ---
+// Updates the book's title and pages using the captured @bookId.
+// Expects a 204 No Content response on success.
+
+PUT {{host}}/books/{{bookId}}
+Content-Type: application/json
+
+{
+"title": "Foundation (Revised Edition)",
+"pages": 255
+}
+
+// --- 5. GET Single Book (Verify Update) ---
+// Check the book again to ensure the title and pages were updated.
+
+GET {{host}}/books/{{bookId}}
+Content-Type: application/json
+
+// --- 6. DELETE the Book ---
+// Deletes the book using the captured @bookId.
+
+DELETE {{host}}/books/{{bookId}}
+Content-Type: application/json
+
+// --- 7. GET Single Book (Verify Deletion) ---
+// Should return a 404 Not Found error, confirming successful deletion.
+
+GET {{host}}/books/{{bookId}}
+Content-Type: application/json
+
+// --- 8. Validation Test (POST with Missing Data) ---
+// Should fail because 'title' and 'author' are missing.
+// Expects a 422 Unprocessable Entity or 500 Internal Server Error (depending on implementation).
+
+POST {{host}}/books
+Content-Type: application/json
+
+{
+"isbn": "978-9999999999",
+"pages": 100
+}
+
+// --- 9. Invalid ID Test (GET Invalid Format) ---
+// Test the ID format validation in the controller.
+// Expects a 400 Bad Request error.
+
+GET {{host}}/books/12345
+Content-Type: application/json
